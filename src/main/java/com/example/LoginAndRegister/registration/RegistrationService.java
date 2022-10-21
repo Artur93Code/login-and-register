@@ -20,7 +20,6 @@ public class RegistrationService {
     private final AppUserService appUserService;
     private final EmailValidator emailValidator;
     private final EmailSender emailSender;
-
     private final ConfirmationTokenService confirmationTokenService;
     public String register(RegistrationRequest request) {
         boolean isValidEmail = emailValidator.test(request.getEmail());
@@ -28,13 +27,24 @@ public class RegistrationService {
         if(!isValidEmail){
             throw new IllegalStateException("Email not valid");
         }
-        String token = appUserService.signUpUser(new AppUser(
-                request.getFirstName(),
-                request.getLastName(),
-                request.getEmail(),
-                request.getPassword(),
-                AppUserRole.USER
-        ));
+        String token = null;
+        try {
+            token = appUserService.signUpUser(new AppUser(
+                    request.getFirstName(),
+                    request.getLastName(),
+                    request.getEmail(),
+                    request.getPassword(),
+                    AppUserRole.USER
+            ));
+        }
+        catch(IllegalStateException ex){
+            //if user exist but not activated account
+            if(ex.getMessage().equals("Email already taken. Please activate account")) {
+                String link = "http://localhost:8080/api/registration/confirm?token=" + token;
+                emailSender.send(request.getEmail(), EmailForm.buildEmail(request.getFirstName(), link));
+            }
+            throw new IllegalStateException(ex.getMessage());
+        }
         String link = "http://localhost:8080/api/registration/confirm?token="+token;
         emailSender.send(request.getEmail(), EmailForm.buildEmail(request.getFirstName(), link));
         return token;

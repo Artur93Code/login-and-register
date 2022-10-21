@@ -1,6 +1,7 @@
 package com.example.LoginAndRegister.security.config;
 
 import com.example.LoginAndRegister.appuser.AppUserService;
+import com.example.LoginAndRegister.security.CustomAuthenticationProvider;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ public class WebSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
 
     private final AppUserService appUserService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final CustomAuthenticationProvider customAuthenticationProvider;
 
 /*    @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -38,11 +40,20 @@ public class WebSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/registration/**")
+                //.antMatchers("/api/registration/**","/registration/**","/styles/**")
+                .antMatchers("/api/registration/**","/api/login/**","/registration/**","/styles/**")
                 .permitAll()
                 .anyRequest()
-                .authenticated().and()
-                .formLogin();
+                .authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/login")//custom login page
+                .usernameParameter("email")  //put this if input id and name for username in login form is different from username
+                .passwordParameter("password") //put this if input id and name for password in login form is different from password
+                .defaultSuccessUrl("/home", true)
+                .permitAll()
+                .and()
+                .logout();
 
         return http.build();
     }
@@ -60,7 +71,7 @@ public class WebSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
         return provider;
     }*/
 
-    @Bean
+/*    @Bean
     public AuthenticationManager authManager(HttpSecurity http)
             throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
@@ -68,5 +79,14 @@ public class WebSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
                 .passwordEncoder(bCryptPasswordEncoder)
                 .and()
                 .build();
+    }*/
+
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity http)
+            throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(customAuthenticationProvider);
+        return authenticationManagerBuilder.build();
+
     }
 }

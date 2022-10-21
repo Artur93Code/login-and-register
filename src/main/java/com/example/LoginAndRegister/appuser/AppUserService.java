@@ -50,14 +50,14 @@ public class AppUserService implements UserDetailsService {
                 );
 
                 confirmationToken = new ConfirmationToken(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(15),
-                user
+                        token,
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusMinutes(15),
+                        user
                 );
-                //appUserRepository.save(appUser);
                 confirmationTokenService.saveConfirmationToken(confirmationToken);
-                return ("Email already taken. Please activate account");
+                //return ("Email already taken. Please activate account");
+                throw new IllegalStateException("Email already taken. Please activate account");
             }
             throw new IllegalStateException("Email already taken");
         }
@@ -81,4 +81,9 @@ public class AppUserService implements UserDetailsService {
     public int enableAppUser(String email){
         return appUserRepository.enableAppUser(email);
     }
+
+ /*   public AppUser signInUser(String email, String password)
+    {
+         appUser = loadUserByUsername(email).getAuthorities();
+    }*/
 }
